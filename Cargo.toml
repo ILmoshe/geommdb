@@ -1,0 +1,10 @@
+[package]
+name = "geommdb"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+geo = "0.28.0"
+geo-types = "0.7.13"
+rstar = "0.12.0"
