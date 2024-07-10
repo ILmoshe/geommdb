@@ -1,0 +1,22 @@
+# .dockerignore
+
+# Version control
+.git
+.gitignore
+
+# Rust build artifacts
+/target
+
+# IDE files
+.vscode
+.idea
+
+# Miscellaneous
+*.log
+*.tmp
+
+# Docker files (optional, depending on your workflow)
+Dockerfile
+.dockerignore
+
+# Any other files or directories you don't need in your Docker image
