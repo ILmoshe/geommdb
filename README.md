@@ -1,2 +1,166 @@
-# geommdb
-In memory db for the geospatial world
+# Geommdb
+
+Geommdb is a geospatial in-memory database built with Rust. It supports basic geospatial operations such as adding and searching geospatial points, and it ensures persistence using a write-ahead log (WAL) and periodic snapshots.
+
+## Features
+
+- **In-memory storage**: Fast access to geospatial data.
+- **Geospatial operations**: Add and search for points within a given radius.
+- **Persistence**: Data is persisted using WAL and snapshots to ensure durability.
+- **Concurrency**: Handles multiple clients concurrently using Tokio.
+
+## Getting Started
+
+### Prerequisites
+
+- **Rust**: Install Rust from [rust-lang.org](https://www.rust-lang.org/). (for running localy)
+- **Docker**: Install Docker from [docker.com](https://www.docker.com/). (for running in a container)
+
+### Installation
+
+#### run local:
+
+1. **Clone the repository**:
+
+   ```sh
+   git clone https://github.com/ILmoshe/geommdb.git
+   cd geommdb
+   ```
+
+2. **Build the project**:
+
+   ```sh
+   cargo build --release
+   ```
+
+3. **Run the server**:
+   ```sh
+   cargo run --release
+   ```
+
+#### Docker
+
+1. **Pull the Docker container**
+
+   ```sh
+   docker pull moshemiz/geomemdb
+   ```
+
+2. **Run the Docker container**:
+   ```sh
+   docker run -p 6379:6379 geommdb
+   ```
+
+### Usage
+
+Once the server is running, you can interact with it using TCP clients. Below are the supported commands:
+
+- **GEOADD**: Add a geospatial point.
+
+  ```
+  GEOADD key latitude longitude
+  ```
+
+  Example:
+
+  ```
+  GEOADD point1 40.7128 -74.0060
+  ```
+
+- **GEOSEARCH**: Search for points within a radius.
+  ```
+  GEOSEARCH latitude longitude radius
+  ```
+  Example:
+  ```
+  GEOSEARCH 40.7128 -74.0060 10
+  ```
+
+### Running localy with Docker
+
+1. **Build the Docker image**:
+
+   ```sh
+   docker build -t geommdb .
+   ```
+
+2. **Run the Docker container**:
+   ```sh
+   docker run -p 6379:6379 geommdb
+   ```
+
+### Project Structure
+
+- `src/main.rs`: Entry point of the application.
+- `src/network.rs`: Handles TCP connections and command parsing.
+- `src/storage.rs`: Contains the `GeoDatabase` struct and its geospatial operations.
+- `src/persistence.rs`: Manages WAL and snapshot operations for data persistence.
+
+### Example Usage
+
+Note: We don't have official libraries for Python yet, but here's a snapshot of how you might interact with the server using Python's built-in libraries:
+
+#### Python
+
+```python
+import socket
+
+
+def send_command(command):
+    server_address = ("127.0.0.1", 6379)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        sock.connect(server_address)
+
+        print(f"Sending: {command}")
+        sock.sendall(command.encode("utf-8"))
+
+        response = sock.recv(1024)
+        print(f'Received: {response.decode("utf-8")}')
+
+    finally:
+        sock.close()
+
+
+if __name__ == "__main__":
+    send_command("GEOADD location1 37.7749 -122.4194")
+    send_command("GEOADD location2 34.0522 -118.2437")
+    send_command("GEOSEARCH 37.7749 -122.4194 500000\n")
+```
+
+#### Node.js
+
+```javascript
+const net = require("net");
+
+function sendCommand(command) {
+  const client = new net.Socket();
+
+  client.connect(6379, "127.0.0.1", () => {
+    console.log(`Sending: ${command}`);
+    client.write(command);
+  });
+
+  client.on("data", (data) => {
+    console.log(`Received: ${data}`);
+    client.destroy();
+  });
+
+  client.on("close", () => {
+    console.log("Connection closed");
+  });
+
+  client.on("error", (err) => {
+    console.error(`Error: ${err.message}`);
+  });
+}
+
+const commands = [
+  "GEOADD location1 37.7749 -122.4194\n",
+  "GEOADD location2 34.0522 -118.2437\n",
+  "GEOSEARCH 37.7749 -122.4194 500000\n",
+];
+
+commands.forEach((command) => sendCommand(command));
+```
