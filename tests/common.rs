@@ -1,8 +1,7 @@
 use std::net::SocketAddr;
 use tokio::task;
 
-use geommdb::network::server::start_server;
-use geommdb::network::replica::{Replica, Role};
+use geommdb::network::{replica::Role, server::start_server};
 
 pub async fn start_leader(addr: SocketAddr) {
     task::spawn(async move {

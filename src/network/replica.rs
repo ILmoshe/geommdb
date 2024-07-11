@@ -3,6 +3,7 @@ use crate::storage::GeoDatabase;
 use log::{error, info};
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
@@ -31,7 +32,9 @@ impl Replica {
 
         if role == Role::Leader {
             // Load the database from snapshot, if available, otherwise create a new one
-            let snapshot_path = std::path::Path::new("snapshot.bincode");
+            let snapshot_path = Path::new("snapshot.bincode");
+            let wal_path = Path::new("wal.log");
+
             if snapshot_path.exists() {
                 match Persistence::load_snapshot() {
                     Ok(loaded_db) => {
@@ -48,11 +51,13 @@ impl Replica {
                 }
             }
 
-            // Load WAL to recover any missed entries
-            if Persistence::load_wal(&mut db.lock().unwrap()).is_ok() {
-                info!("Loaded write-ahead log (WAL).");
-            } else {
-                error!("Failed to load write-ahead log (WAL).");
+            if wal_path.exists() {
+                // Load WAL to recover any missed entries
+                if Persistence::load_wal(&mut db.lock().unwrap()).is_ok() {
+                    info!("Loaded write-ahead log (WAL).");
+                } else {
+                    error!("Failed to load write-ahead log (WAL).");
+                }
             }
         }
 
@@ -84,7 +89,7 @@ impl Replica {
             sleep(Duration::from_secs(5)).await;
             let mut replicas_to_remove = Vec::new();
             {
-                let mut replicas = self.replicas.lock().unwrap();
+                let replicas = self.replicas.lock().unwrap();
                 let now = std::time::Instant::now();
                 for (addr, last_heartbeat) in replicas.iter() {
                     if now.duration_since(*last_heartbeat).as_secs() > 10 {

@@ -3,7 +3,7 @@ use crate::network::replica::{Replica, Role};
 use crate::persistence::WalEntry;
 use log::{error, info};
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
