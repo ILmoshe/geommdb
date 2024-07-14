@@ -41,4 +41,8 @@ impl GeoDatabase {
             })
             .collect()
     }
+
+    pub fn geo_get(&self, key: &str) -> Option<Point<f64>> {
+        self.data.get(key).cloned()
+    }
 }

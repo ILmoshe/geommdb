@@ -37,6 +37,7 @@ pub async fn handle_client(
                         let mut db = replica.db.lock().unwrap();
                         db.geo_add(key.clone(), lat, lon);
                         let mut persistence = replica.persistence.lock().unwrap();
+
                         if let Err(e) = persistence.log_entry(WalEntry::GeoAdd {
                             key: key.clone(),
                             lat,
@@ -44,6 +45,7 @@ pub async fn handle_client(
                         }) {
                             error!("Failed to log entry; err = {:?}", e);
                         }
+                        
                         // Replicate the write to other replicas
                         // (Simplified: this should be done asynchronously in a real implementation)
                         info!(
@@ -78,6 +80,20 @@ pub async fn handle_client(
                     );
                     results.join("\n") + "\n"
                 }
+                Command::GeoGet { key } => {
+                    let db = replica.db.lock().unwrap();
+                    match db.geo_get(&key) {
+                        Some(point) => {
+                            info!("GeoGet command processed: key={}, lat={}, lon={}", key, point.y(), point.x());
+                            format!("{} {}\n", point.y(), point.x())
+                        }
+                        None => {
+                            info!("GeoGet command: key={} not found", key);
+                            "Not Found\n".to_string()
+                        }
+                    }
+                }
+
                 Command::Heartbeat => {
                     if let Role::Leader = replica.role {
                         if let Ok(addr) = stream.peer_addr() {

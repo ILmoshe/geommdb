@@ -1,7 +1,7 @@
 import socket
 
 
-def send_command(command):
+def send_command(command: str):
     server_address = ("127.0.0.1", 6379)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -21,4 +21,5 @@ def send_command(command):
 if __name__ == "__main__":
     send_command("GEOADD location1 37.7749 -122.4194")
     send_command("GEOADD location2 34.0522 -118.2437")
-    send_command("GEOSEARCH 37.7749 -122.4194 500000\n")
+    # send_command("GEOSEARCH 37.7749 -122.4194 500000\n")
+    send_command("GEOGET location1")
