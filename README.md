@@ -2,6 +2,25 @@
 
 Geommdb is a geospatial in-memory database built with Rust. It supports basic geospatial operations such as adding and searching geospatial points, and it ensures persistence using a write-ahead log (WAL) and periodic snapshots.
 
+### Contribution
+
+We welcome contributions to the **geommdb** project! We are looking for contribution which wil design, develop, discuss the project, If you're interested in improving the codebase, adding new features, or fixing bugs, please follow these steps:
+
+1. **Fork the Repository**: Click the "Fork" button at the top right of this repository to create your own fork.
+2. **Clone Your Fork**: Clone your forked repository to your local machine using `git clone <your-forked-repo-url>`.
+3. **Create a Branch**: Create a new branch for your feature or bugfix with a descriptive name using `git checkout -b feature-or-bugfix-name`.
+4. **Make Changes**: Implement your changes in the codebase. Ensure you follow the existing code style and conventions.
+5. **Commit Your Changes**: Commit your changes with a descriptive commit message using `git commit -m "Description of your changes"`.
+6. **Push to Your Fork**: Push your branch to your forked repository using `git push origin feature-or-bugfix-name`.
+7. **Create a Pull Request**: Open a pull request to the main repository. Provide a detailed description of your changes and any relevant information.
+
+### Contact
+
+If you have any questions or need assistance, feel free to open an issue or reach out to the maintainers.
+
+We appreciate your contributions and look forward to collaborating with you!
+
+
 ## Features
 
 - **In-memory storage**: Fast access to geospatial data.
