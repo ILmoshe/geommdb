@@ -9,7 +9,7 @@ const SNAPSHOT_FILE: &str = "snapshot.bincode"; // A snapshot is a complete copy
 #[derive(Serialize, Deserialize)]
 pub enum WalEntry {
     // Make this enum public
-    GeoAdd { key: String, lat: f64, lon: f64 },
+    GeoAdd { key: String,  coords: Vec<(f64, f64)> },
 }
 
 pub struct Persistence {
@@ -44,8 +44,8 @@ impl Persistence {
             let entry: WalEntry = bincode::deserialize(line.as_bytes())
                 .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
             match entry {
-                WalEntry::GeoAdd { key, lat, lon } => {
-                    db.geo_add(key, lat, lon);
+                WalEntry::GeoAdd { key, coords } => {
+                    db.geo_add(key, coords);
                 }
             }
         }

@@ -1,11 +1,11 @@
-use crate::network::command::{parse_command, Command};
-use crate::network::replica::{Replica, Role};
-use crate::persistence::WalEntry;
-use log::{error, info};
 use std::net::SocketAddr;
-use std::sync::{Arc};
+use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use log::{info, error};
+use crate::network::command::{Command, parse_command};
+use crate::network::replica::{Replica, Role};
+use crate::persistence::WalEntry;
 
 pub async fn handle_client(
     mut stream: TcpStream,
@@ -32,26 +32,20 @@ pub async fn handle_client(
         info!("Received command: {}", input.trim());
         let response = if let Some(command) = parse_command(&input) {
             match command {
-                Command::GeoAdd { key, lat, lon } => {
+                Command::GeoAdd { key, coords } => {
+                    let new_coord = coords.clone();
                     if let Role::Leader = replica.role {
                         let mut db = replica.db.lock().unwrap();
-                        db.geo_add(key.clone(), lat, lon);
+                        db.geo_add(key.clone(), coords);
                         let mut persistence = replica.persistence.lock().unwrap();
 
                         if let Err(e) = persistence.log_entry(WalEntry::GeoAdd {
                             key: key.clone(),
-                            lat,
-                            lon,
+                            coords: new_coord,
                         }) {
                             error!("Failed to log entry; err = {:?}", e);
                         }
-                        
-                        // Replicate the write to other replicas
-                        // (Simplified: this should be done asynchronously in a real implementation)
-                        info!(
-                            "GeoAdd command processed: key={}, lat={}, lon={}",
-                            key, lat, lon
-                        );
+                        info!("GeoAdd command processed: key={}", key);
                         "OK\n".to_string()
                     } else {
                         // Forward write requests to the leader
@@ -83,9 +77,9 @@ pub async fn handle_client(
                 Command::GeoGet { key } => {
                     let db = replica.db.lock().unwrap();
                     match db.geo_get(&key) {
-                        Some(point) => {
-                            info!("GeoGet command processed: key={}, lat={}, lon={}", key, point.y(), point.x());
-                            format!("{} {}\n", point.y(), point.x())
+                        Some(data) => {
+                            info!("GeoGet command processed: key={}", key);
+                            data + "\n"
                         }
                         None => {
                             info!("GeoGet command: key={} not found", key);
@@ -93,7 +87,6 @@ pub async fn handle_client(
                         }
                     }
                 }
-
                 Command::Heartbeat => {
                     if let Role::Leader = replica.role {
                         if let Ok(addr) = stream.peer_addr() {
