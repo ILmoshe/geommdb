@@ -1,7 +1,16 @@
 pub enum Command {
-    GeoAdd { key: String, coords: Vec<(f64, f64)> },
-    GeoSearch { lat: f64, lon: f64, radius: f64 },
-    GeoGet { key: String },
+    GeoAdd {
+        key: String,
+        coords: Vec<(f64, f64)>,
+    },
+    GeoSearch {
+        lat: f64,
+        lon: f64,
+        radius: f64,
+    },
+    GeoGet {
+        key: String,
+    },
     Heartbeat,
 }
 
@@ -19,7 +28,10 @@ pub fn parse_command(input: &str) -> Option<Command> {
                     }
                 })
                 .collect();
-            Some(Command::GeoAdd { key: key.to_string(), coords })
+            Some(Command::GeoAdd {
+                key: key.to_string(),
+                coords,
+            })
         }
         ["GEOSEARCH", lat, lon, radius] => Some(Command::GeoSearch {
             lat: lat.parse().ok()?,

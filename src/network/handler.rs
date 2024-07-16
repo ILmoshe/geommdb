@@ -1,11 +1,11 @@
+use crate::network::command::{parse_command, Command};
+use crate::network::replica::{Replica, Role};
+use crate::persistence::WalEntry;
+use log::{error, info};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-use log::{info, error};
-use crate::network::command::{Command, parse_command};
-use crate::network::replica::{Replica, Role};
-use crate::persistence::WalEntry;
 
 pub async fn handle_client(
     mut stream: TcpStream,
@@ -34,11 +34,12 @@ pub async fn handle_client(
             match command {
                 Command::GeoAdd { key, coords } => {
                     let new_coord = coords.clone();
+
                     if let Role::Leader = replica.role {
                         let mut db = replica.db.lock().unwrap();
                         db.geo_add(key.clone(), coords);
-                        let mut persistence = replica.persistence.lock().unwrap();
 
+                        let mut persistence = replica.persistence.lock().unwrap();
                         if let Err(e) = persistence.log_entry(WalEntry::GeoAdd {
                             key: key.clone(),
                             coords: new_coord,
@@ -51,6 +52,7 @@ pub async fn handle_client(
                         // Forward write requests to the leader
                         if let Some(leader_addr) = leader_addr {
                             if let Ok(mut leader_stream) = TcpStream::connect(leader_addr).await {
+                                // TODO: Do we actually need to connect to the leader in every request?, heartbeat can ensure that we are connected to the leader.
                                 leader_stream.write_all(input.as_bytes()).await.unwrap();
                                 let mut leader_response = [0; 1024];
                                 let n = leader_stream.read(&mut leader_response).await.unwrap();

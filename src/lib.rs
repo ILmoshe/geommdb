@@ -1,4 +1,4 @@
-pub mod network;
 pub mod geospatial;
+pub mod network;
 pub mod persistence;
 pub mod storage;

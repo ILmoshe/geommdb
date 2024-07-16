@@ -10,7 +10,6 @@ mod common;
 async fn test_leader_replica_interaction() {
     dotenv::from_filename(".env.test").ok();
 
-
     let leader_addr = "127.0.0.1:6379".parse().unwrap();
     // let replica_addr = "127.0.0.1:6380".parse().unwrap();
 
@@ -42,5 +41,3 @@ async fn test_leader_replica_interaction() {
 
     sleep(Duration::from_secs(1)).await;
 }
-
-

@@ -9,7 +9,10 @@ const SNAPSHOT_FILE: &str = "snapshot.bincode"; // A snapshot is a complete copy
 #[derive(Serialize, Deserialize)]
 pub enum WalEntry {
     // Make this enum public
-    GeoAdd { key: String,  coords: Vec<(f64, f64)> },
+    GeoAdd {
+        key: String,
+        coords: Vec<(f64, f64)>,
+    },
 }
 
 pub struct Persistence {

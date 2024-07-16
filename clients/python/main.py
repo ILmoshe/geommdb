@@ -19,7 +19,10 @@ def send_command(command: str):
 
 
 if __name__ == "__main__":
-    send_command("GEOADD location1 37.7749 -122.4194")
-    send_command("GEOADD location2 34.0522 -118.2437")
-    # send_command("GEOSEARCH 37.7749 -122.4194 500000\n")
-    send_command("GEOGET location1")
+    # send_command("GEOADD location1 37.7749 -122.4194")
+    # send_command("GEOADD location2 34.0522 -118.2437")
+    # # send_command("GEOSEARCH 37.7749 -122.4194 500000\n")
+    # send_command("GEOGET location1")
+    # # send command geoadd polygon
+    # send_command("GEOADD polygon1 37.7749 -122.4194 37.7749 -122.4194 37.7749 -122.4194 37.7749 -122.4194")
+    send_command("GEOGET polygon1")

@@ -16,4 +16,5 @@ Cargo.lock
 node_modules
 
 wal.log
-snapshot.x
+snapshot.bincode
+.idea

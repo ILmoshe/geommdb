@@ -1,9 +1,9 @@
 use crate::network::handler::handle_client;
 use crate::network::replica::{Replica, Role};
 use crate::persistence::Persistence;
-use std::net::SocketAddr;
-use std::sync::{Arc};
 use log::info;
+use std::net::SocketAddr;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::signal;
 

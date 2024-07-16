@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use geo::{HaversineDistance, Point, Polygon};
-use rstar::{RTree, RTreeObject, AABB, PointDistance};
+use rstar::{PointDistance, RTree, RTreeObject, AABB};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GeoDatabase {
@@ -38,7 +38,11 @@ impl GeoDatabase {
         let mut results = Vec::new();
 
         // Search for points within the radius
-        for point in self.point_tree.nearest_neighbor_iter(&center).filter(|p| p.haversine_distance(&center) <= radius) {
+        for point in self
+            .point_tree
+            .nearest_neighbor_iter(&center)
+            .filter(|p| p.haversine_distance(&center) <= radius)
+        {
             if let Some((key, _)) = self.points.iter().find(|(_, &v)| v == *point) {
                 results.push(key.clone());
             }
@@ -47,11 +51,14 @@ impl GeoDatabase {
         // Create an AABB for the search radius
         let search_aabb = AABB::from_corners(
             Point::new(lon - radius, lat - radius),
-            Point::new(lon + radius, lat + radius)
+            Point::new(lon + radius, lat + radius),
         );
 
         // Search for polygons that intersect with the radius circle
-        for polygon in self.polygon_tree.locate_in_envelope_intersecting(&search_aabb) {
+        for polygon in self
+            .polygon_tree
+            .locate_in_envelope_intersecting(&search_aabb)
+        {
             if let Some((key, _)) = self.polygons.iter().find(|(_, v)| v.clone() == polygon) {
                 results.push(key.clone());
             }
@@ -64,7 +71,15 @@ impl GeoDatabase {
         if let Some(point) = self.points.get(key) {
             Some(format!("POINT({} {})", point.y(), point.x()))
         } else if let Some(polygon) = self.polygons.get(key) {
-            Some(format!("POLYGON(({}))", polygon.exterior().points().map(|p| format!("{} {}", p.y(), p.x())).collect::<Vec<_>>().join(", ")))
+            Some(format!(
+                "POLYGON(({}))",
+                polygon
+                    .exterior()
+                    .points()
+                    .map(|p| format!("{} {}", p.y(), p.x()))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))
         } else {
             None
         }
