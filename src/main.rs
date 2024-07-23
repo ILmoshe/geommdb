@@ -1,11 +1,14 @@
+mod api;
 mod network;
 mod persistence;
 mod storage;
 
+use crate::network::replica::Replica;
 use dotenv;
 use network::replica::Role;
 use network::server::start_server;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use std::{env, process};
 
 extern crate pretty_env_logger;
