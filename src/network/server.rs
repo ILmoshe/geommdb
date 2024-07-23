@@ -15,9 +15,7 @@ pub async fn start_server(addr: SocketAddr, leader_addr: Option<SocketAddr>, rol
 
     if let Role::Replica = role {
         let replica_clone = Arc::clone(&replica);
-        tokio::spawn(async move {
-            replica_clone.send_heartbeat().await;
-        });
+        tokio::spawn(async move { replica_clone.send_heartbeat().await; });
     } else if let Role::Leader = role {
         let replica_clone = Arc::clone(&replica);
         tokio::spawn(async move {

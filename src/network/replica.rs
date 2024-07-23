@@ -9,6 +9,9 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio::time::{sleep, Duration};
 
+const DEAD_REPLICA_TIMEOUT_SECONDS: u64 = 10;
+
+
 #[derive(Clone, PartialEq)]
 pub enum Role {
     Leader,
@@ -86,13 +89,13 @@ impl Replica {
 
     pub async fn monitor_replicas(&self) {
         loop {
-            sleep(Duration::from_secs(5)).await;
+            sleep(Duration::from_secs(10)).await; // checks every 10 seconds
             let mut replicas_to_remove = Vec::new();
             {
                 let replicas = self.replicas.lock().unwrap();
                 let now = std::time::Instant::now();
                 for (addr, last_heartbeat) in replicas.iter() {
-                    if now.duration_since(*last_heartbeat).as_secs() > 10 {
+                    if now.duration_since(*last_heartbeat).as_secs() > DEAD_REPLICA_TIMEOUT_SECONDS {
                         info!("Replica at {} is considered dead", addr);
                         replicas_to_remove.push(*addr);
                     }
