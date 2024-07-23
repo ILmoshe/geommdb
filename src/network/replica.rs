@@ -2,6 +2,7 @@ use crate::persistence::Persistence;
 use crate::storage::GeoDatabase;
 use log::{error, info};
 use std::collections::HashMap;
+use std::env;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -10,7 +11,6 @@ use tokio::net::TcpStream;
 use tokio::time::{sleep, Duration};
 
 const DEAD_REPLICA_TIMEOUT_SECONDS: u64 = 10;
-
 
 #[derive(Clone, PartialEq)]
 pub enum Role {
@@ -75,12 +75,29 @@ impl Replica {
     }
 
     pub async fn send_heartbeat(&self) {
+        let heartbeat_rate = env::var("HEARTBEAT_EVERY_X_SECONDS")
+            .unwrap_or("5".to_string())
+            .parse::<u64>()
+            .unwrap();
+
         if let Some(leader_addr) = self.leader_addr {
+            let mut stream = TcpStream::connect(leader_addr).await;
+
             loop {
-                sleep(Duration::from_secs(5)).await;
-                if let Ok(mut stream) = TcpStream::connect(leader_addr).await {
-                    if stream.write_all(b"HEARTBEAT\n").await.is_ok() {
-                        info!("Sent heartbeat to leader at {}", leader_addr);
+                sleep(Duration::from_secs(heartbeat_rate)).await;
+
+                match &mut stream {
+                    Ok(ref mut stream) => {
+                        if stream.write_all(b"HEARTBEAT\n").await.is_ok() {
+                            info!("Sent heartbeat to leader at {}", leader_addr);
+                        } else {
+                            info!("Failed to send heartbeat, attempting to reconnect...");
+                            *stream = TcpStream::connect(leader_addr).await.unwrap();
+                        }
+                    }
+                    Err(_) => {
+                        info!("Failed to connect to leader, retrying...");
+                        stream = TcpStream::connect(leader_addr).await;
                     }
                 }
             }
@@ -95,7 +112,8 @@ impl Replica {
                 let replicas = self.replicas.lock().unwrap();
                 let now = std::time::Instant::now();
                 for (addr, last_heartbeat) in replicas.iter() {
-                    if now.duration_since(*last_heartbeat).as_secs() > DEAD_REPLICA_TIMEOUT_SECONDS {
+                    if now.duration_since(*last_heartbeat).as_secs() > DEAD_REPLICA_TIMEOUT_SECONDS
+                    {
                         info!("Replica at {} is considered dead", addr);
                         replicas_to_remove.push(*addr);
                     }
@@ -110,6 +128,7 @@ impl Replica {
     }
 
     pub async fn handle_heartbeat(&self, addr: SocketAddr) {
+        info!("Heartbeat from replica at {}", addr);
         let mut replicas = self.replicas.lock().unwrap();
         replicas.insert(addr, std::time::Instant::now());
     }

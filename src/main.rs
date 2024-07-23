@@ -5,8 +5,8 @@ mod storage;
 use dotenv;
 use network::replica::Role;
 use network::server::start_server;
-use std::{env, process};
 use std::net::SocketAddr;
+use std::{env, process};
 
 extern crate pretty_env_logger;
 #[macro_use]
@@ -52,6 +52,24 @@ fn handle_environment() {
     load_env_file(env_file);
 }
 
+async fn run_server(leader_addr: SocketAddr, this_addr: SocketAddr) {
+    let role = env::var("ROLE").unwrap_or_else(|_| "leader".to_string());
+    match role.as_str() {
+        "leader" => {
+            info!("I am LEADER running at {}", leader_addr);
+            start_server(this_addr, None, Role::Leader).await;
+        }
+        "replica" => {
+            info!("I am replica running at: {}", this_addr);
+            info!("Leader is running at {}", leader_addr);
+            start_server(this_addr, Some(leader_addr), Role::Replica).await;
+        }
+        _ => {
+            eprintln!("Invalid role specified. Use 'leader' or 'replica'.");
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     handle_environment();
@@ -68,19 +86,5 @@ async fn main() {
     info!("Creating Geomemdb ...");
     map_art();
 
-    let role = env::var("ROLE").unwrap_or_else(|_| "leader".to_string());
-    match role.as_str() {
-        "leader" => {
-            info!("I am LEADER running at {}", leader_addr);
-            start_server(this_addr, None, Role::Leader).await;
-        }
-        "replica" => {
-            info!("I am replica running at: {}", this_addr);
-            info!("Leader is running at {}", leader_addr);
-            start_server(this_addr, Some(leader_addr), Role::Replica).await;
-        }
-        _ => {
-            eprintln!("Invalid role specified. Use 'leader' or 'replica'.");
-        }
-    }
+    run_server(leader_addr, this_addr).await;
 }
